@@ -316,7 +316,7 @@ if(WindowType == "bartlett"   ){ WindowFunction = (2/(nSamplesInWindow - 1)) *
                                                           ((nSamplesInWindow - 1)/2 - abs(IntegerSequence - (nSamplesInWindow - 1)/2)) }
 if(WindowType == "gaussian"   ){ if(is.null(WindowParameter)){ WindowParameter = 0.4 }
                                          WindowFunction = exp(-0.5 * ((IntegerSequence - (nSamplesInWindow - 1)/2)/
-  									                              (WindowParameter * (nSamplesInWindow - 1)/2))^2)
+										                              (WindowParameter * (nSamplesInWindow - 1)/2))^2)
                                        }
 if(WindowType == "kaiser"     ){ if(is.null(WindowParameter)){ WindowParameter = 3 } # Note that the default argument for spectrogram() in phonTools is 3, whereas the default value for windowfunc() in phonTools is 2.
                                          WindowFunction = besselI(WindowParameter * pi * sqrt(1 - (2 * (IntegerSequence)/(nSamplesInWindow - 1) - 1)^2),0)/
