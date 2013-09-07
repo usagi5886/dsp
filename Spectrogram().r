@@ -1,14 +1,15 @@
 # Spectrogram()
 
-# Input = a soundfile stored on the user's computer (or a numeric vector containing the equivalent information therein)
+# Input: a soundfile stored on the user's computer (or a numeric vector containing the equivalent information therein)
 
-# Output = if plot=FALSE, returns a matrix (with various attributes) containing the result of the spectrographic analysis; if plot=TRUE, nothing is returned, and instead a filled-contour plot of the spectrogram is produced
+# Output: if plot=FALSE, returns a matrix containing the result of the spectrographic analysis, with attributes indicating all the non-NULL argument specifications that influenced the result of the analysis;
+#         if plot=TRUE, nothing is returned, and instead a filled-contour plot of the spectrogram is produced
 
 # -------------------------------------------------------------------------------
 
 # This script is released under the Berkeley Software Distribution (BSD) license ( http://opensource.org/licenses/BSD-3-Clause ):
 
-#Copyright (c) 2013, Aaron Albin
+# Copyright (c) 2013, Aaron Albin
 
 # Modified from the spectrogram() function in the 'phonTools' package of R by Santiago Barreda
 # http://cran.r-project.org/web/packages/phonTools/index.html
@@ -18,7 +19,7 @@
 #Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 #Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 #Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-#Neither the name of the <ORGANIZATION> nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+#The name of the author of this software may not be used to endorse or promote products derived from this software without specific prior written permission.
 
 #THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
@@ -122,27 +123,36 @@ plot = TRUE,
 #(All of the following will do nothing if 'plot' is set to FALSE.)
 
 # [10]
+PlotFast=TRUE,
+# If set to FALSE, the filled.contour() function will be used. This produces much better looking graphics (which is best for putting into publications), but takes considerably longer to plot.
+# If set to TRUE (the default), the image() function will be used instead, with 'useRaster' set to TRUE. This makes the plotting very fast, which is optimal for when one is dynamically exploring/interacting with the signal.
+# (This may not work properly if raster graphics are not supported on your device. See help("image") for details.)
+
+# [11]
+add = FALSE,
+# This determines whether an entirely new plot is drawn (with all the annotation) or whether just the core image is drawn
+# Careful - this should only be set to TRUE if a spectrogram has already been drawn (and therefore a graphics device / window is already open.
+# Note: If 'add' is set to TRUE, the coordinate system of the pre-existing plot will be used; hence, any specifications of xlim and ylim will be ignored for the subsequent call to Spectrogram(..., add=TRUE).
+
+# [12]
 col = NULL,
 # At present, you can use this argument in four ways:
 # - If you leave this at NULL, the color map will be DarkBlue-Blue-Cyan-Yellow-Orange-Red-Brown
 # - If you set this to "alternate", the color map will be Black-Red-Orange-Yellow-White
-# - You can also set this to "greyscale" to have things mapped onto a continuum from black to white.
+# - You can also set this to "greyscale"/"grayscale" to have things mapped onto a continuum from black to white.
 # - Finally, you can also provide a custom vector of colors to use.
 
-# [11]
-nColorLevels = NULL,
-# The number of color gradations to be used for the spectrogram.
-# If this is left at NULL, the decibel range of the spectrogram (as determined by the DynamicRange) will be used such that there is a unique color for each decibel.
-
-# [12a]
+# [13a]
 xlim = NULL,
 # If left NULL, this will be set to the full time range of the soundfile
 
-# [12b]
+# [13b]
 ylim = NULL,
-# If left NULL, this will go up to 5000 Hz - a generally useful range for analyzing speech
+# If left NULL, this will go from 0 to the soundfile's Nyquist frequency.
+# Note that Praat and phonTools default to 5000 Hz.
+# (Avoiding a fixed arbitrary number makes the user think more carefully about what they are zooming into.)
 
-# [13]
+# [14]
 # Main title, x axis label, and y axis label
 main = "",
 xlab = "Time (ms)",
@@ -150,20 +160,19 @@ ylab = "Frequency (Hz)"
 
 ){ # Begin function definition
 
-#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# STEP ONE: Check to make sure everything in the input is acceptable
+# Check to make sure Audio and SamplingFrequency are acceptable (and compatible with each other)
 
 AudioClass = class(Audio)
-
 AcceptableClasses = c("sound","Wave","Sample","audioSample","numeric")
 AudioClassAcceptable = as.logical( sum( AudioClass == AcceptableClasses ) )
 if(!AudioClassAcceptable){
 stop("The 'Audio' argument must be one of the following classes:\n       sound, Wave, Sample, audioSample, numeric")
-}else{
+} # End 'if class for 'Audio' argument is not one of the acceptable classes'
 
+# If Audio is numeric, ensure that the SamplingFrequency is specified
 if( (AudioClass=="numeric" & is.null(SamplingFrequency)) ){
 stop("Must specify SamplingFrequency.")
-}else{ # i.e. if 'Audio' is one of the four classes, or if Audio is numeric and the SamplingFrequency is specified (... then proceed)
+} # End 'if/else using numeric vector but did not specify sampling rate'
 
 if( AudioClass!="numeric" # If the Audio object is one of the four audio classes (sound/Wave/Sample/audioSample), ...
     & !is.null(SamplingFrequency) ){ # and if they provide a superfluous SamplingFrequency, ...
@@ -172,7 +181,14 @@ warning("Specified SamplingFrequency ignored; the one associated with Audio obje
 } # End check whether to issue a warning
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-# STEP TWO: Samples and SamplingFrequency 
+# Samples and SamplingFrequency 
+
+AudioClass = class(Audio)
+AcceptableClasses = c("sound","Wave","Sample","audioSample","numeric")
+AudioClassAcceptable = as.logical( sum( AudioClass == AcceptableClasses ) )
+if(!AudioClassAcceptable){
+stop("The 'Audio' argument must be one of the following classes:\n       sound, Wave, Sample, audioSample, numeric")
+} # End 'if class for 'Audio' argument is not one of the acceptable classes'
 
 # Now store the actual samples themselves in a variable 'Samples' (doing stereo-to-mono conversion as necessary)
 # Also, store the sample rate in a variable 'SamplingFrequency' (over-writing the NULL input to the function as necessary)
@@ -237,7 +253,7 @@ if(nSamplesInWindow%%2==0){ nSamplesInWindow = nSamplesInWindow + 1 }
 # Stop computation if the user has provided both 'TimeStepSize' *and* 'nTimeSteps':
 if( !is.null(TimeStepSize) & !is.null(nTimeSteps) ){
 stop("You can only specify either TimeStepSize *or* nTimeSteps, not both.")
-}else{
+} # End 'if the user simultaneously specified both TimeStepSize *and* nTimeSteps'
 
 # If the 'TimeStepSize' and 'nTimeSteps' are both set to NULL, use an nTimeSteps of 400 (as per the default in spectrogram() from the 'phonTools' package)
 if( is.null(TimeStepSize) & is.null(nTimeSteps) ){ nTimeSteps = 400 }
@@ -252,13 +268,11 @@ if(!is.null(nTimeSteps)){ TimeStep = floor( length(Samples)/nTimeSteps ) }
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # If the user selected to apply preemphasis...
+
 if(Preemphasis==TRUE){
-
 PreemphasizedSamples = as.numeric( filter(Samples, c(1, -1), method = "convolution", sides = 1) ) # filter() is a low-level function from the 'stats' package
-
 # The filter() function leaves the first sample as NA, so just fill this in with the original value
 PreemphasizedSamples[1] <- Samples[1]
-
 # Now, over-write the original samples object with the pre-emphasized samples
 # In the function that this code will ultimately reside in, there is no danger of re-running these lines of code multiple times and thereby cyclically distort the Samples data
 Samples = PreemphasizedSamples
@@ -300,6 +314,13 @@ TargetSamples = ZeroPaddedSamples[CurrentLeftEdge:(CurrentLeftEdge + nSamplesInW
 times = FrequencyResolution*length(TargetSamples) - length(TargetSamples)
 TrailingZeroesAppended = c(TargetSamples, rep(0, times=times))
 
+# First make sure the 'WindowType' argument is OK
+AcceptableWindowTypes = c("rectangular", "square", "blackman", "hann", "hanning", "hamming", "cosine", "sine", "bartlett", "gaussian", "kaiser" )
+WindowTypeAcceptable = as.logical( sum( WindowType == AcceptableWindowTypes ) )
+if(!WindowTypeAcceptable){
+stop("The 'WindowType' argument must be one of the following:\n       rectangular / square, blackman, hann / hanning, hamming, cosine / sine, bartlett, gaussian, kaiser")
+} # End 'if the WindowType argument is not one of the acceptable values'
+
 IntegerSequence = 0:(nSamplesInWindow-1) # Technically not needed for 'rectangular', but include here nonetheless
 if(WindowType == "rectangular"|
    WindowType == "square"     ){ WindowFunction = rep(1, nSamplesInWindow) }
@@ -323,6 +344,8 @@ if(WindowType == "kaiser"     ){ if(is.null(WindowParameter)){ WindowParameter =
 										                  besselI(WindowParameter * pi, 0)
                                        }
 
+if( WindowType!="gaussian" & WindowType!="kaiser" & !is.null(WindowParameter) ){warning("The specification of WindowParameter was ignored.\n(WindowParameter is only used if WindowType is 'gaussian' or 'kaiser'.)")}
+
 # Now use this window function to do the core computations of the spectrogram
 WindowedSamples = TrailingZeroesAppended * WindowFunction
 MeanSubtracted = WindowedSamples - mean(WindowedSamples)
@@ -343,6 +366,7 @@ UnnormalizedSpectrogramMatrix = t( sapply(X=LeftEdgeLocations, FUN=Windowing) )
 SpectrogramMatrix = UnnormalizedSpectrogramMatrix - max(UnnormalizedSpectrogramMatrix)
 
 # Clip very low values to be within the dynamic range
+
 if(!is.null(DynamicRange)){
 NegativeDecibelThreshold = -1 * DynamicRange # 'DynamicRange' is assumed to be positive. Perhaps eventually enforce this with 'stop()'.
 SpectrogramMatrix[which(SpectrogramMatrix < NegativeDecibelThreshold)] = NegativeDecibelThreshold
@@ -360,6 +384,7 @@ FrequencySequence = FrequencySequence[-1]
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # If requested, return the matrix object
+
 if(plot==FALSE){
 
 # Add the times as row names and frequencies as column names
@@ -368,6 +393,7 @@ colnames(SpectrogramMatrix) = as.numeric(round(FrequencySequence, 2))
 # Technically the rounding factor of 2 could be made into a customizable parameter of the overall function, but that is kind of low-level and not immensely useful so just leave as-is for now.
 
 # For reconstructability purposes, include *all* the arguments/parameters used in the creation of the spectrogram as attributes to the matrix object
+# Note that any NULL attributes will NOT be included! (because of how attributes work in R in general)
 attributes(SpectrogramMatrix) = append( attributes(SpectrogramMatrix), list(SamplingFrequency=SamplingFrequency,
                                                                             WindowLength=WindowLength,
                                                                             FrequencyResolution=FrequencyResolution,
@@ -386,7 +412,7 @@ return(SpectrogramMatrix)
 
 if(is.null(col)){ ColorGenerator = colorRampPalette(c("dark blue", "blue", "cyan", "yellow", "orange", "red", "brown")) }else{
 if(identical(col,"alternate")){ ColorGenerator = colorRampPalette(c("black", "red", "orange", "yellow", "white")) }else{
-if(identical(col,"greyscale")){ ColorGenerator = colorRampPalette(c("white", "black")) }else{
+if( identical(col,"greyscale") | identical(col,"grayscale") ){ ColorGenerator = colorRampPalette(c("white", "black")) }else{
 ColorGenerator = colorRampPalette( col ) # By this point in the code, it is assumed that the user has supplied a vector of colors to create the spectrogram
 }}} # End 'if/else' for greyscale, alternate, and NULL
 
@@ -394,12 +420,11 @@ AmplitudeRange = range(SpectrogramMatrix, finite = TRUE) # 'finite=TRUE' exclude
 MinimumAmplitude = AmplitudeRange[1]
 MaximumAmplitude = AmplitudeRange[2] # Should always be zero due to the normalization in the post-processing
 
-# If nColorLevels is set to NULL, over-ride this with the default of one color per decibel in the amplitude range
-if( is.null( nColorLevels ) ){
+# For the number of color levels, have one color per decibel in the amplitude range
+
 MinimumAmplitude = AmplitudeRange[1]
 MaximumAmplitude = AmplitudeRange[2] # Should always be zero due to the normalization in the post-processing
 nColorLevels = abs(MinimumAmplitude) - abs(MaximumAmplitude) # In the original code from spectrogram() in package 'phonTools', the number from the line of code above is multiplied by 1.2
-} # End 'if nColorLevels' is NULL
 
 ColorLevels = seq(from=MinimumAmplitude, to=MaximumAmplitude, length.out=nColorLevels+1) # Add 1 so that a color is assigned to both endpoints of the range
 ColorPalette = ColorGenerator(round(nColorLevels)) # Rounded in case the user provides a decimal number, or if DynamicRange is set to a non-whole number.
@@ -407,33 +432,83 @@ ColorPalette = ColorGenerator(round(nColorLevels)) # Rounded in case the user pr
 # If xlim is NULL, set it to the full time range of the soundfile
 if( is.null(xlim) ){ xlim = range(TimeSequence) }
 
-# if ylim is NULL, set it to cap out at 5000 by default
-if( is.null(ylim) ){ ylim = c( min(FrequencySequence), 5000) }
+# if ylim is NULL, set it to cap out at the Nyquist frequency (i.e. the highest visible frequency given the sampling rate of the soundfile)
+if( is.null(ylim) ){ ylim = range(FrequencySequence) }
 
 # If the user provides a maximum ylim value that is beyond the Nyquist frquency (i.e. half of the sampling frequency), clip it to the Nyquist frequency
 MaximumFrequency = ylim[which.max(ylim)]
 if( MaximumFrequency > (SamplingFrequency/2) ){ ylim[which.max(ylim)] = SamplingFrequency/2 }
 
-# Set up the plot
+if( PlotFast == TRUE){ # i.e. if the user wants to use image(..., useRaster=TRUE)
+
+image( x=TimeSequence, 
+       y=FrequencySequence,
+       z=SpectrogramMatrix,
+       xlim=xlim,
+       ylim=ylim,
+       zlim=AmplitudeRange,
+       col=ColorPalette,
+       add=add,
+       xaxs="i",
+       yaxs="i",
+       xlab=xlab,
+       ylab=ylab,
+       # breaks, # Leave this unspecified since it defaults to equidistant breaks, which is exactly what I want
+       main=main,
+       oldstyle=FALSE, # FALSE = there are color intervals of equal lengths between the limits
+                       # TRUE = the midpoints of the color intervals are equally spaced, with zlim[1] and zlim[2] as midpoints
+       useRaster=TRUE # As described up above, this will significantly improve processing speed (which is the whole point of this being 'PlotFast') but may not always work (depending on the device the user is sending the image to)
+) # End call to 'image()'
+
+}else{ # i.e. if the user wants to use filled.contour
+
+# Set up the plot (only if 'add' is FALSE - the default)
+if(add==FALSE){
 plot.new()
 plot.window(xlim=xlim, ylim=ylim, xaxs="i", yaxs="i")
+} # End 'if add is FALSE'
 
 # The following version of filled.contour(), with the period at the front, omits the color bar to the right of the normal filled.contour() function
 .filled.contour(x=TimeSequence, y=FrequencySequence, z=SpectrogramMatrix, levels=ColorLevels, col=ColorPalette)
 
-# Add all the other typical dressings to the plot
-box()
+# Add all the other typical dressings to the plot (again, only if 'add' is FALSE - the default)
+
+if(add==FALSE){
 Axis(TimeSequence, side=1)
 Axis(FrequencySequence, side=2)
 title(main=main, xlab=xlab, ylab=ylab)
+} # End 'if add is FALSE'
+
+} # End 'if/else PlotFast is TRUE'
+
+box() # Putting this here makes sure that there always is a box, no matter what (e.g. it doesn't disappear with repeated over-plottings)
 
 } # End 'if/else plot==TRUE'
 
-} # End 'if/else the user simultaneously specified both TimeStepSize *and* nTimeSteps'
 
-} # End 'if/else using numeric vector but did not specify sampling rate'
-
-} # End 'if/else class for 'Audio' argument is one of the acceptable classes
+#########################################
+# Quick synopsis of arguments:          #
+# Spectrogram( Audio,                   #
+#              SamplingFrequency=NULL,  #
+#              WindowLength = 5,        #
+#              FrequencyResolution = 4, #
+#              TimeStepSize = NULL,     #
+#              nTimeSteps = NULL,       #
+#              Preemphasis = TRUE,      #
+#              DynamicRange = 70,       #
+#              Omit0Frequency = FALSE,  #
+#              WindowType = "kaiser",   #
+#              WindowParameter = NULL,  #
+#              plot = TRUE,             #
+#              PlotFast = TRUE,         #
+#              add = FALSE,             #
+#              col = NULL,              #
+#              xlim = NULL,             #
+#              ylim = NULL,             #
+#              main = "",               #
+#              xlab = "Time (ms)",      #
+#              ylab = "Frequency (Hz)") #
+#########################################
 
 } # End definition of function 'Spectrogram()'
 
