@@ -31,14 +31,14 @@
 # Downloadable from Camacho's homepage: http://www.cise.ufl.edu/~acamacho/english/curriculum.html#publicaciones
 
 # In systematic comparisons of F0 extraction algorithms (e.g. based on the EGG baseline data at http://www.cstr.ed.ac.uk/research/projects/fda/ ), SWIPE' performs equally as well as, if not better than, other available algorithms. See for example: 
-# Keelan et al 2012: http://scitation.aip.org/content/asa/journal/poma/11/1/10.1121/1.3609833
+# Evanini et al 2012: http://scitation.aip.org/content/asa/journal/poma/11/1/10.1121/1.3609833
 # Tsanas et al 2014: http://scitation.aip.org/content/asa/journal/jasa/135/5/10.1121/1.4870484
 
-# Note that SWIPE' has been implemented in C by Kyle Gordman for Linux and Mac, which is significantly faster than both Camacho's original Matlab code or this R implementation.
+# Note that SWIPE' has been implemented in C by Kyle Gorman for Linux and Mac, which is significantly faster than both Camacho's original Matlab code or this R implementation.
 # For further information, see the following links: 
-# - Gordman's homepage: http://www.csee.ogi.edu/~gormanky/
-# - Gordman's SWIPE' homepage: http://www.ling.upenn.edu/~kgorman/c/swipe/
-# - Gordman's GitHub page: https://github.com/kylebgorman/swipe/
+# - Gorman's homepage: http://www.csee.ogi.edu/~gormanky/
+# - Gorman's SWIPE' homepage: http://www.ling.upenn.edu/~kgorman/c/swipe/
+# - Gorman's GitHub page: https://github.com/kylebgorman/swipe/
 
 #########
 # USAGE #
