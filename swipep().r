@@ -28,17 +28,25 @@
 
 # This, in turn, was based off of an earlier implementation (SWIPE) in Camacho's dissertation:
 # Camacho, A. (2007). SWIPE: A sawtooth waveform inspired pitch estimator for speech and music. Doctoral dissertation, University of Florida, Florida.
-# Downloadable from Camacho's homepage: http://www.cise.ufl.edu/~acamacho/english/curriculum.html#publicaciones
+# ( Downloadable from Camacho's homepage: http://www.cise.ufl.edu/~acamacho/english/curriculum.html#publicaciones )
 
 # In systematic comparisons of F0 extraction algorithms (e.g. based on the EGG baseline data at http://www.cstr.ed.ac.uk/research/projects/fda/ ), SWIPE' performs equally as well as, if not better than, other available algorithms. See for example: 
-# Evanini et al 2012: http://scitation.aip.org/content/asa/journal/poma/11/1/10.1121/1.3609833
-# Tsanas et al 2014: http://scitation.aip.org/content/asa/journal/jasa/135/5/10.1121/1.4870484
+# - Evanini et al 2012: http://scitation.aip.org/content/asa/journal/poma/11/1/10.1121/1.3609833
+# - Tsanas et al 2014: http://scitation.aip.org/content/asa/journal/jasa/135/5/10.1121/1.4870484
 
-# Note that SWIPE' has been implemented in C by Kyle Gorman for Linux and Mac, which is significantly faster than both Camacho's original Matlab code or this R implementation.
+# Note that SWIPE' has been implemented in C by Kyle Gorman for Linux and Mac, which is significantly faster than both Camacho's original Matlab code and this R implementation.
 # For further information, see the following links: 
 # - Gorman's homepage: http://www.csee.ogi.edu/~gormanky/
 # - Gorman's SWIPE' homepage: http://www.ling.upenn.edu/~kgorman/c/swipe/
 # - Gorman's GitHub page: https://github.com/kylebgorman/swipe/
+
+# Note also that SWIPE' has recently been developed further into Aud-SWIPE', the corresponding C and Matlab code for which can be downloaded at:
+# https://github.com/saul-calderonramirez/Aud-SWIPE-P
+# (Click 'Wiki' on the right side of the page for more details.)
+
+# The Aug-SWIPE' algorithm itself is documented in the following publications:
+# - Camacho 2012: http://ieeexplore.ieee.org/xpl/login.jsp?arnumber=6310450
+# - Calderón et al 2013: http://www.actapress.com/Abstract.aspx?paperId=455433
 
 #########
 # USAGE #
@@ -67,9 +75,9 @@
 # --- [ Output ] --- #
 
 # Returns an object of class 'data.frame' with three columns:
-# 1) 'Time' = the times at which the pitch was estimated
-# 2) 'Frequency' = the fundamental frequency estimate at that time point.
-# 3) 'Strength' = the strength of the corresponding F0 estimate
+# 1) 'Time' = the times at which the F0 was estimated
+# 2) 'Frequency' = the fundamental frequency estimate at each time point
+# 3) 'Strength' = the strength of each F0 estimate
 
 # 'Frequency' will sometimes be NaN (e.g. if dERBs is set high), but every frame should have a 'Strength' value.
 
