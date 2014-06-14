@@ -270,7 +270,9 @@ if(!is.null(nTimeSteps)){ TimeStep = floor( length(Samples)/nTimeSteps ) }
 # If the user selected to apply preemphasis...
 
 if(Preemphasis==TRUE){
-PreemphasizedSamples = as.numeric( filter(Samples, c(1, -1), method = "convolution", sides = 1) ) # filter() is a low-level function from the 'stats' package
+PreemphasizedSamples = as.numeric( stats:::filter(Samples, c(1, -1), method = "convolution", sides = 1) )
+# filter() is a low-level function from the 'stats' package
+# The package is specified in case it the function name masked by other identically-named functions in other packages (e.g. package 'signal')
 # The filter() function leaves the first sample as NA, so just fill this in with the original value
 PreemphasizedSamples[1] <- Samples[1]
 # Now, over-write the original samples object with the pre-emphasized samples
