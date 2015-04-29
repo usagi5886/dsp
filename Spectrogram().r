@@ -1,27 +1,40 @@
 # Spectrogram()
 
-# Input: a soundfile stored on the user's computer (or a numeric vector containing the equivalent information therein)
+# Input: Any of the following three options:
+#        (A) a path to a soundfile saved somewhere on your computer
+#        (B) an R object containing the information contained in this soundfile (imported into R using the 'audio', 'phonTools', 'tuneR', or 'sound' package)
+#        (C) a numeric vector containing the information inside the soundfile
+# Note: Option (A) requires at least one of the following packages to be installed: 'audio', 'phonTools', 'tuneR', or 'sound'.
 
-# Output: if plot=FALSE, returns a matrix containing the result of the spectrographic analysis, with attributes indicating all the non-NULL argument specifications that influenced the result of the analysis;
-#         if plot=TRUE, nothing is returned, and instead a filled-contour plot of the spectrogram is produced
+# Output: if plot=FALSE, returns a matrix containing the result of the analysis, with attributes indicating all the non-NULL argument specifications that influenced the result of the analysis;
+#         if plot=TRUE (the default), nothing is returned, and instead a plot of the spectrogram is produced
+
+# Usage  -  Option (A): Spectrogram("C:/Users/MyUsername/Desktop/soundfile.wav")
+
+#           Option (B): library("audio")
+#                       x = load.wave("C:/Users/MyUsername/Desktop/soundfile.wav")
+#                       Spectrogram(x)
+
+#           Option (C): x = c(3.094482e-02, 2.154541e-02, 3.213501e-02, ...) # Created using sine-waves, etc.
+#                       Spectrogram(x)
 
 # -------------------------------------------------------------------------------
 
 # This script is released under the Berkeley Software Distribution (BSD) license ( http://opensource.org/licenses/BSD-3-Clause ):
 
-# Copyright (c) 2013, Aaron Albin
+# Copyright (c) 2013-2015, Aaron Albin
 
 # Modified from the spectrogram() function in the 'phonTools' package of R by Santiago Barreda
 # http://cran.r-project.org/web/packages/phonTools/index.html
 
 # All rights reserved.
 
-#Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-#Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-#Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-#The name of the author of this software may not be used to endorse or promote products derived from this software without specific prior written permission.
+# Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+# Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+# Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+# The name of the author of this software may not be used to endorse or promote products derived from this software without specific prior written permission.
 
-#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # -------------------------------------------------------------------------------
 
@@ -29,31 +42,38 @@ Spectrogram = function( # Begin argument list
 
 # [1]
 Audio,
+# The 'Audio' argument specifies the audio data from which the spectrogram is to be made.
+# Three options are available for using this argument.
 
-# The 'Audio' argument contains the sound from which the spectrogram was made.
-# It can be any of the following four kinds of objects:
+# Option (A):
+# You can set 'Audio' to be a character string (i.e. a character vector of length 1) with the path to a soundfile saved somewhere on your computer
+# Note that this requires at least one of the following packages to be installed: 'audio', 'phonTools', 'tuneR', or 'sound'.
 
-# An object of class 'sound', created with the 'loadsound()' function from the package 'phonTools'
-# An object of class 'Wave', created with the 'readWave()' function from the package 'tuneR'
-# An object of class 'Sample', created with the 'loadSample()' function from the package 'sound'
-# An object of class 'audioSample', created with the 'load.wave()' function from the package 'audio'
+# Option (B)
+# You can also set 'Audio' to be one of the following four kinds of R objects (each of which contains an R-internal representation of the information inside a soundfile):
+# - An object of class 'audioSample', created with the 'load.wave()' function from the package 'audio'
+# - An object of class 'sound', created with the 'loadsound()' function from the package 'phonTools'
+# - An object of class 'Wave', created with the 'readWave()' function from the package 'tuneR'
+# - An object of class 'Sample', created with the 'loadSample()' function from the package 'sound'
 
-# Or, in a more compact form:
+# In table form, this can be represented as follows:
 #_CLASS_______FUNCTION_____PACKAGE__
+# audioSample load.wave()  audio
 # sound       loadsound()  phonTools
 # Wave        readWave()   tuneR
 # Sample      loadSample() sound
-# audioSample load.wave()  audio
 
-# It can also be a numeric vector (representing a sequence of samples taken from a sound wave) if and only if the SamplingFrequency argument is specified (i.e. not NULL).
+# Option (C)
+# You can also set 'Audio' to be a numeric vector (representing a sequence of samples taken from a sound wave) if and only if the SamplingFrequency argument is specified (i.e. not NULL).
+# (Note that setting 'Audio' to be a 2-row or 2-column matrix (representing the two channels in a stereo soundfile) is currently unsupported.)
 
 # [2]
 SamplingFrequency=NULL,
 
 # SamplingFrequency. The sampling frequency/rate of the sound in Hertz.
-# Only necessary to specify if 'Audio' is of class 'numeric'; if it is of class 'sound', 'Wave', 'Sample', or 'audioSample', this is ignored (hence does not need to be specified).
+# Only necessary to specify if 'Audio' is of class 'numeric'; if it is of any other class, this is ignored (hence does not need to be specified).
 
-# The default value for SamplingFrequency is set to 22050 in phonTools 'Spectrogram' function, but it is safer to make the user always specify it if they want to use a numeric vector for the Audio object.
+# The default value for SamplingFrequency is set to 22050 in the phonTools spectrogram function, but it is safer to make the user always specify it if they want to use a numeric vector for the Audio object.
 
 # [3]
 WindowLength = 5,
@@ -117,7 +137,9 @@ WindowParameter = NULL,
 # [9]
 plot = TRUE,
 # Whether the spectrogram should be plotted or not
-# If FALSE, no spectrogram is plotted, and instead, a matrix is returned containing the magnitude at each bin center
+# If FALSE, no spectrogram is plotted, and instead, a matrix is returned containing the magnitude at each bin center.
+# The column names of this matrix correspond to time, and the row names correspond to frequency.
+# Note that both are fully unrounded numbers stored as a character string (e.g. "115.532879818594").
 
 # ^-^-^-^-^-^-^ Plotting parameters ^-^-^-^-^-^-^
 #(All of the following will do nothing if 'plot' is set to FALSE.)
@@ -160,13 +182,14 @@ ylab = "Frequency (Hz)"
 
 ){ # Begin function definition
 
+#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Check to make sure Audio and SamplingFrequency are acceptable (and compatible with each other)
 
 AudioClass = class(Audio)
-AcceptableClasses = c("sound","Wave","Sample","audioSample","numeric")
+AcceptableClasses = c("character","audioSample","sound","Wave","Sample","numeric")
 AudioClassAcceptable = as.logical( sum( AudioClass == AcceptableClasses ) )
 if(!AudioClassAcceptable){
-stop("The 'Audio' argument must be one of the following classes:\n       sound, Wave, Sample, audioSample, numeric")
+stop("The 'Audio' argument must be one of the following classes:\n       character, audioSample, sound, Wave, Sample, numeric")
 } # End 'if class for 'Audio' argument is not one of the acceptable classes'
 
 # If Audio is numeric, ensure that the SamplingFrequency is specified
@@ -183,20 +206,8 @@ warning("Specified SamplingFrequency ignored; the one associated with Audio obje
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # Samples and SamplingFrequency 
 
-AudioClass = class(Audio)
-AcceptableClasses = c("sound","Wave","Sample","audioSample","numeric")
-AudioClassAcceptable = as.logical( sum( AudioClass == AcceptableClasses ) )
-if(!AudioClassAcceptable){
-stop("The 'Audio' argument must be one of the following classes:\n       sound, Wave, Sample, audioSample, numeric")
-} # End 'if class for 'Audio' argument is not one of the acceptable classes'
-
 # Now store the actual samples themselves in a variable 'Samples' (doing stereo-to-mono conversion as necessary)
 # Also, store the sample rate in a variable 'SamplingFrequency' (over-writing the NULL input to the function as necessary)
-
-if( AudioClass=="numeric"){
-Samples = Audio # As-is (since it must be numeric by this point in the code)
-# SamplingFrequency has already been specified as an argument to the function (as enforced above)
-} # End 'if class of input Audio object is 'numeric'
 
 # /------------------------------------\
 # | Notes on stereo-to-mono conversion:|
@@ -207,13 +218,65 @@ Samples = Audio # As-is (since it must be numeric by this point in the code)
 # | There are two ways of doing so: either summing and re-normalizing the two channels, or averaging the two channels.
 # | (See http://www.mathworks.com/matlabcentral/newsreader/view_thread/44379 for discussion.)
 # | The latter will be done here, due to (1) its conceptual simplicity, (2) this is what is implemented 'tuneR:::mono', and (3) this appears to be the standard: http://dsp.stackexchange.com/questions/2484/converting-from-stereo-to-mono-by-averaging
-# | This will be consistently implemented as '(object@right + object@left)/2', following the mono() function in 'tuneR'.
+# | This will be consistently implemented as '(object$right + object$left)/2', following the mono() function in 'tuneR'.
+
+if( AudioClass=="character"){ # A character string containing a file path
+
+if( length(Audio)>=2 ){ stop("'Audio' is of length >= 2.\n       If specifying a file path, the character vector must be of length 1.") }
+if( !file.exists(Audio) ){ stop("No file exists at the path specified in the 'Audio' argument.") }
+
+InstalledPackages = rownames(installed.packages())
+audioInstalled =  ( "audio" %in% InstalledPackages )
+phonToolsInstalled = ( "phonTools" %in% InstalledPackages )
+tuneRInstalled =  ( "tuneR" %in% InstalledPackages )
+soundInstalled =  ( "sound" %in% InstalledPackages )
+
+if( !phonToolsInstalled & !tuneRInstalled & !soundInstalled & !audioInstalled ){
+stop("To specify a character-string file path for the 'Audio' argument,\n       at least one of the following packages must be installed:\n       audio, phonTools, tuneR, or sound")
+} # End 'if none of the four packages for handling audio are installed'
+
+# Now only read in one required package, with the hierarchy audio > phonTools > tuneR > sound.
+# Using that package, over-write the character string file path with the actual audio data.
+# Finally, adjust the AudioClass variable as appropriate (so as to flow into the code below for determining the sampling frequency).
+if(audioInstalled){
+	require("audio")
+	Audio = load.wave(Audio)
+	AudioClass = "audioSample"
+}else{
+	if(audioInstalled){
+		require("phonTools")
+		Audio = loadsound(Audio)
+		AudioClass = "sound"
+	}else{
+		if(audioInstalled){
+			require("tuneR")
+			Audio = readWave(Audio)
+			AudioClass = "Wave"
+		}else{
+			if(audioInstalled){
+				require("sound")
+				Audio = loadSample(Audio)
+				AudioClass = "Sample"
+			} # End if package 'sound' is installed
+		} # End if/else package 'tuneR' is installed
+	} # End if/else package 'phonTools' is installed	
+} # End if/else package 'audio' is installed
+
+} # End "if Audio is of class 'character'"
+
+if( AudioClass=="audioSample"){ # From 'audio' package
+IsStereo = is.matrix(Audio) # A stereo audioSample is stored as a matrix (and a mono one is not)
+if(IsStereo){ Samples = ( Audio[1,] + Audio[2,] ) / 2
+       }else{ Samples = as.numeric( Audio )
+} # End 'if/else is stereo'
+SamplingFrequency = Audio$rate
+} # End "if Audio is of class 'audioSample'"
 
 if( AudioClass=="sound"){ # From 'phonTools' package
 # Since, at present, phonTools only supports mono soundfiles (i.e. a 'sound' object is by definition mono), so no checking of stereo/mono status or stereo-to-mono conversion is necessary
 Samples = as.numeric( Audio$sound )
 SamplingFrequency = Audio$fs
-} # End 'if class of input Audio object is 'sound'
+} # End "if Audio is of class 'sound'"
 
 if( AudioClass=="Wave"){ # From 'tuneR' package
 IsStereo = attributes(Wave)$stereo
@@ -221,7 +284,7 @@ if(IsStereo){ Samples = ( attributes(Audio)$left + attributes(Wave)$right ) / 2
        }else{ Samples = attributes(Audio)$left # Recall that 'attributes(Wave)$right' is 'numeric(0)' if a mono file is being dealt with
 } # End 'if/else is stereo'
 SamplingFrequency = attributes(Audio)$samp.rate
-} # End 'if class of input Audio object is 'Wave'
+} # End "if Audio is of class 'Wave'"
 
 if( AudioClass=="Sample"){ # From 'sound' package
 IsStereo = ( nrow(Audio)==2 ) # Recall the stereo-mono distinction is encoded via the differing number of rows in the Sample object
@@ -229,15 +292,12 @@ if(IsStereo){ Samples = ( Audio$sound[1,] + Audio$sound[2,] ) / 2
        }else{ Samples = Audio$sound[1,]
 } # End 'if/else is stereo'
 SamplingFrequency = Audio$rate
-} # End 'if class of input Audio object is 'Sample'
+} # End "if Audio is of class 'Sample'"
 
-if( AudioClass=="audioSample"){ # From 'audio' package
-IsStereo = is.matrix(Audio) # Recall that a stereo audioSample is stored as a matrix (and a mono one is not)
-if(IsStereo){ Samples = ( Audio[1,] + Audio[2,] ) / 2
-       }else{ Samples = as.numeric( Audio )
-} # End 'if/else is stereo'
-SamplingFrequency = Audio$rate
-} # End 'if class of input Audio object is 'audioSample'
+if( AudioClass=="numeric"){
+Samples = Audio # As-is (since it must be numeric by this point in the code)
+# SamplingFrequency has already been specified as an argument to the function (as enforced above)
+} # End "if Audio is of class 'numeric'"
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -390,9 +450,8 @@ FrequencySequence = FrequencySequence[-1]
 if(plot==FALSE){
 
 # Add the times as row names and frequencies as column names
-rownames(SpectrogramMatrix) = as.numeric(round(TimeSequence, 2))
-colnames(SpectrogramMatrix) = as.numeric(round(FrequencySequence, 2))
-# Technically the rounding factor of 2 could be made into a customizable parameter of the overall function, but that is kind of low-level and not immensely useful so just leave as-is for now.
+rownames(SpectrogramMatrix) = as.numeric(TimeSequence)
+colnames(SpectrogramMatrix) = as.numeric(FrequencySequence)
 
 # For reconstructability purposes, include *all* the arguments/parameters used in the creation of the spectrogram as attributes to the matrix object
 # Note that any NULL attributes will NOT be included! (because of how attributes work in R in general)
@@ -513,5 +572,3 @@ box() # Putting this here makes sure that there always is a box, no matter what 
 #########################################
 
 } # End definition of function 'Spectrogram()'
-
-# End script
