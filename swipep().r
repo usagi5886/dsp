@@ -3,17 +3,6 @@
 # (C) 2014  Aaron Albin   [ www.aaronalbin.com] #
 #===============================================#
 
-################################################################################################
-# - - - - - - - - - - - - - - - - - - - - L I C E N S E - - - - - - - - - - - - - - - - - - - -#
-################################################################################################
-# This program is free software. You can redistribute it and/or modify it under the terms of   #
-#    the GNU General Public License as published by the Free Software Foundation -             #
-#    either version 3 of the License, or (at your option) any later version.                   #
-# This program is distributed in the hope that it will be useful, but without any warranty -   #
-#    without even the implied warranty of merchantability or fitness for a particular purpose. #
-# For details on the GNU General Public License, see: http://www.gnu.org/licenses/             #
-################################################################################################
-
 #########
 # ABOUT #
 #########
@@ -568,3 +557,17 @@ return(data.frame(Time=t[-1],Frequency=p[-1],Strength=s[-1])) # Drop first row (
 ####################################################################################
 } # End definition of function 'swipep()'
 
+########################################################################
+# This program is free software: you can redistribute it and/or modify #
+# it under the terms of the GNU General Public License as published by #
+# the Free Software Foundation, either version 3 of the License, or    #
+# (at your option) any later version.                                  #
+#                                                                      #
+# This program is distributed in the hope that it will be useful,      #
+# but without any warranty; without even the implied warranty of       #
+# merchantability or fitness for a particular purpose.  See the        #
+# GNU General Public License for more details.                         #
+#                                                                      #
+# To receive a copy of the GNU General Public License, see:            #
+# http://www.gnu.org/licenses/                                         #
+########################################################################
